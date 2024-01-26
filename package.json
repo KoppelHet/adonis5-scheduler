@@ -1,5 +1,5 @@
 {
-	"name": "adonis5-scheduler",
+	"name": "@koppelhet/adonis5-scheduler",
 	"version": "2.1.1",
 	"description": "This library provides an easy way to schedule recurring tasks for AdonisJS",
 	"scripts": {
