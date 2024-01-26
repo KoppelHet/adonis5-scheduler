@@ -18,6 +18,9 @@
 		"release": "np",
 		"version": "npm run build"
 	},
+	"publishConfig": {
+		"@koppelhet:registry": "https://npm.pkg.github.com"
+	},
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/reg2005/adonis5-scheduler.git"
