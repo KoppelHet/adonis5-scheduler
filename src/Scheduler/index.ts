@@ -7,6 +7,7 @@ import NodeSchedule from 'node-schedule'
 import { IocContract } from '@adonisjs/fold'
 import Logger from '@ioc:Adonis/Core/Logger'
 import cronstrue from 'cronstrue'
+import { glob } from 'glob'
 
 /**
  * @module Scheduler
@@ -15,6 +16,7 @@ import cronstrue from 'cronstrue'
 export default class Scheduler {
 	private appRootPath: string
 	private tasksPath: string
+	private newTasksPath: string
 	private registeredTasks: BaseTask[]
 	/**
 	 */
@@ -32,6 +34,8 @@ export default class Scheduler {
 	private _configureTasksPath() {
 		this.tasksPath = path.join(this.appRootPath, 'app', 'Tasks')
 		this.tasksPath = path.normalize(this.tasksPath)
+
+		this.newTasksPath = path.join(this.appRootPath, 'integrations')
 	}
 
 	/**
@@ -87,11 +91,40 @@ export default class Scheduler {
 		debug('Scan tasks path %s', this.tasksPath)
 		if (taskClasses.length === 0) {
 			try {
-				const taskFiles = fs.readdirSync(this.tasksPath)
+				const tasksPaths = await glob(path.join(this.newTasksPath, '**', 'Tasks'))
+
+				const paths = await Promise.all(
+					tasksPaths.map((p) => {
+						return {
+							path: p,
+							files: fs.readdirSync(p),
+						}
+					})
+				)
+
+				const taskFiles = paths.reduce(
+					(acc, p) => {
+						return [
+							...acc,
+							...p.files.map((f) => {
+								return {
+									path: p.path,
+									file: f,
+								}
+							}),
+						]
+					},
+					[] as {
+						path: string
+						file: string
+					}[]
+				)
+
+				console.log(taskFiles)
 				for (const file of taskFiles) {
-					const isAllowed = ['.js', '.ts'].includes(path.extname(file)) && !file.includes('.map')
+					const isAllowed = ['.js', '.ts'].includes(path.extname(file.file)) && !file.file.includes('.map')
 					if (isAllowed) {
-						const filePath = path.join(this.tasksPath, file)
+						const filePath = path.join(file.path, file.file)
 						let task: typeof BaseTask
 						try {
 							task = require(filePath).default
